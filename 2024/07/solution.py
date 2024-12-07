@@ -64,7 +64,14 @@ def reached_target(target: int, current: int, operands: deque[int], concat: bool
 
 @performance_profiler
 def part1(data):
-    return sum(x[0] for x in data if reached_target(x[0], x[1], x[2], False))
+    total = 0
+    failures = []
+    for x in data:
+        if reached_target(x[0], x[1], x[2], False):
+            total += x[0]
+        else:
+            failures.append(x)
+    return total, failures
 
 
 @performance_profiler
@@ -75,5 +82,6 @@ def part2(data):
 if __name__ == "__main__":
     parsed_data = read_input("input.txt")
 
-    print("Part 1:", part1(parsed_data))
-    print("Part 2:", part2(parsed_data))
+    p1_total, p2_input = part1(parsed_data)
+    print("Part 1:", p1_total)
+    print("Part 2:", p1_total + part2(p2_input))
