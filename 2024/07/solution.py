@@ -5,6 +5,8 @@ https://adventofcode.com/2024/day/7
 """
 import re
 from collections import deque
+from functools import partial
+from multiprocessing import Pool
 from time import perf_counter as measure_time
 
 def performance_profiler(method):
@@ -62,6 +64,53 @@ def reached_target(target: int, current: int, operands: deque[int], concat: bool
         return valid
 
 
+def process_entry(entry, concat=False):
+    """
+    Process a single entry for parallelization.
+    
+    Args:
+        entry: A tuple containing (target, current, operands)
+        concat: A boolean flag for concatenation
+    
+    Returns:
+        A tuple of (target, is_valid)
+    """
+    target, current, operands = entry
+    is_valid = reached_target(target, current, operands, concat)
+    return (target, is_valid)
+
+
+@performance_profiler
+def part1_parallel(data, num_processes=None):
+    """
+    Parallel implementation of part1 function.
+    
+    Args:
+        data: List of entries to process
+        num_processes: Number of processes to use (None uses all available cores)
+    
+    Returns:
+        Tuple of (total, failures)
+    """
+    # Use a process pool
+    with Pool(processes=num_processes) as pool:
+        # Process all entries in parallel
+        results = pool.map(partial(process_entry, concat=False), data)
+    
+    # Aggregate results
+    total = 0
+    failures = []
+    for target, is_valid in results:
+        if is_valid:
+            total += target
+        else:
+            # Find the original entry to add to failures
+            original_entry = next(entry for entry in data if entry[0] == target)
+            failures.append(original_entry)
+    
+    return total, failures
+
+
 @performance_profiler
 def part1(data):
     total = 0
@@ -75,13 +124,40 @@ def part1(data):
 
 
 @performance_profiler
+def part2_parallel(data, num_processes=None):
+    """
+    Parallel implementation of part2 function.
+    
+    Args:
+        data: List of entries to process
+        num_processes: Number of processes to use (None uses all available cores)
+    
+    Returns:
+        Sum of targets that can be reached with concatenation
+    """
+    # Use a process pool
+    with Pool(processes=num_processes) as pool:
+        # Process all entries in parallel with concatenation enabled
+        results = pool.map(partial(process_entry, concat=True), data)
+    
+    # Sum the targets that are valid
+    return sum(target for target, is_valid in results if is_valid)
+    
+
+@performance_profiler
 def part2(data):
     return sum(x[0] for x in data if reached_target(x[0], x[1], x[2], True))
 
 
 if __name__ == "__main__":
+    NUM_PROCS = 4
     parsed_data = read_input("input.txt")
 
     p1_total, p2_input = part1(parsed_data)
-    print("Part 1:", p1_total)
-    print("Part 2:", p1_total + part2(p2_input))
+    p1p_total, p2p_input = part1_parallel(parsed_data, NUM_PROCS)
+
+    p2_total = p1_total + part2(p2_input)
+    p2p_total = p1p_total + part2_parallel(p2p_input, NUM_PROCS)
+
+    print("Part 1:", p1_total, p1p_total)
+    print("Part 2:", p2_total, p2p_total)
