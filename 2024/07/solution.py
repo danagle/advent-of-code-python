@@ -36,7 +36,7 @@ def read_input(filename: str) -> list[tuple[int, int, deque[int]]]:
 def reached_target(target: int, current: int, operands: deque[int], concat: bool) -> bool:
     """
     Determines whether a target value (target) can be reached using a series
-    of operations on a deque of integers (operands) and a current value (curr).
+    of operations on a deque of integers (operands) and a current value (current).
 
     Args:
         target: The target value to reach.
