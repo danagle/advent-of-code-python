@@ -45,7 +45,7 @@ def reached_target(target: int, current: int, operands: deque[int], concat: bool
         concat: A boolean flag indicating whether concatenation of numbers (joining digits) is allowed.
     """
     # The base case where there are no operands remaining. Target achieved?
-    if len(operands) == 0:
+    if len(operands) == 0 or current > target:
         return target == current
     else:
         # Remove the last element
