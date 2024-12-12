@@ -1,10 +1,10 @@
-from time import perf_counter as measure_time
-from typing import Dict, Tuple
 """
 Advent of Code 2024
 Day 12: Garden Groups
 https://adventofcode.com/2024/day/12
 """
+from time import perf_counter as measure_time
+from typing import Dict, Tuple
 
 def performance_profiler(method):
     """
@@ -59,19 +59,16 @@ def parse_input(file_name: str) -> Dict[Tuple[int, int], str]:
 
 
 @performance_profiler
-def solve_day12(input_file: str = "input.txt"):
+def solve_day12(grid: Dict[Tuple[int, int], str]):
     """
     Solve AoC Day 12 challenge.
     
     Args:
-        input_file (str): Path to the input file
+        grid (Dict[Tuple[int, int], str]): Grid representation with (x,y) coordinates as keys
     
     Returns:
         Tuple[int, int, float]: Part 1 result, Part 2 result, and execution time
-    """
-    # Parse the input file into a grid representation
-    grid = parse_input(input_file)
-    
+    """    
     # Track visited points to avoid reprocessing
     visited = set()
     
@@ -138,6 +135,9 @@ def solve_day12(input_file: str = "input.txt"):
 
 
 if __name__ == "__main__":
-    part1, part2 = solve_day12()
+    # Parse the input file into a grid representation
+    grid = parse_input("input.txt")
+
+    part1, part2 = solve_day12(grid)
     print(f"Part 1: {part1}")
     print(f"Part 2: {part2}")
