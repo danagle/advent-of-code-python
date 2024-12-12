@@ -1,9 +1,10 @@
+from time import perf_counter as measure_time
+from typing import Dict, Tuple
 """
 Advent of Code 2024
 Day 12: Garden Groups
 https://adventofcode.com/2024/day/12
 """
-from time import perf_counter as measure_time
 
 def performance_profiler(method):
     """
@@ -36,222 +37,107 @@ def performance_profiler(method):
     return timing_wrapper
 
 
-def parse_input(file_path):
+def parse_input(file_name: str) -> Dict[Tuple[int, int], str]:
     """
-    Parse the input file into a grid representation using complex numbers.
-    
-    Reads the input file and converts it into a dictionary where:
-    - Keys are complex numbers representing grid coordinates (x + y*1j)
-    - Values are the characters at those coordinates
+    Parse input file into a grid representation.
     
     Args:
-        file_path (str): Path to the input file
+        file_name (str): Path to the input file
     
     Returns:
-        dict: A dictionary representing the grid with complex number coordinates
+        Dict[Tuple[int, int], str]: Grid representation with (x,y) coordinates as keys
     """
-    # Read the file and strip any trailing whitespace
-    with open(file_path, "r") as f:
-        lines = f.read().strip().splitlines()
-
-    # Create grid using complex number coordinates
+    with open(file_name, "r") as file:
+        content = file.read().strip().splitlines()
+    
     grid = {}
-    for row, line in enumerate(lines):
-        for col, tile in enumerate(line):
-            # Use complex number (x + y*1j) as unique grid coordinate
-            grid[col + row * 1j] = tile
+    for y, line in enumerate(content):
+        for x, tile in enumerate(line):
+            grid[(x, y)] = tile
     
     return grid
 
 
-def flood_fill(grid, start):
+@performance_profiler
+def solve_day12(input_file: str = "input.txt"):
     """
-    Perform a flood fill algorithm to find a connected region in the grid.
-    
-    Explores and collects all connected positions with the same symbol 
-    starting from the given start position.
+    Solve AoC Day 12 challenge.
     
     Args:
-        grid (dict): The grid dictionary with complex number coordinates
-        start (complex): Starting position for flood fill
+        input_file (str): Path to the input file
     
     Returns:
-        set: A set of all positions in the connected region
+        Tuple[int, int, float]: Part 1 result, Part 2 result, and execution time
     """
-    # Initialize the region with the start position
-    region = set([start])
+    # Parse the input file into a grid representation
+    grid = parse_input(input_file)
     
-    # Get the symbol at the start position
-    symbol = grid[start]
+    # Track visited points to avoid reprocessing
+    visited = set()
     
-    # Queue for breadth-first search
-    queue = [start]
+    # Variables for answers to part 1 and part 2
+    part1, part2 = 0, 0
     
-    # Explore the region
-    while queue:
-        # Get current position from queue
-        pos = queue.pop()
+    # Directions: up, right, down, left
+    directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+    
+    # Iterate through all points in the grid
+    for point in grid:
+        # Skip previously processed points
+        if point in visited:
+            continue
         
-        # Check adjacent positions (right, left, down, up)
-        for d in [1, -1, 1j, -1j]:
-            # Calculate new position
-            new_pos = pos + d
+        visited.add(point)
+        
+        # Initialize region metrics
+        area = 1        # Size of the current region (starts at 1)
+        perimeter = 0   # Number of boundary edges
+        sides = 0       # Number of distinct sides
+        
+        # Queue for breadth-first search of the region
+        queue = [point]
+        
+        # Explore the connected region
+        while queue:
+            # Dequeue the current point
+            current = queue.pop(0)
             
-            # Check if new position is valid and not yet explored
-            if (new_pos in grid and 
-                new_pos not in region and 
-                grid[new_pos] == symbol):
-                # Add to region and queue for further exploration
-                region.add(new_pos)
-                queue.append(new_pos)
-    
-    return region
-
-
-def get_area(region):
-    """
-    Calculate the area of a given region.
-    
-    Args:
-        region (tuple): A tuple containing the region's symbol and positions
-    
-    Returns:
-        int: Number of positions in the region
-    """
-    # Return the number of positions in the region
-    return len(region[1])
-
-
-def get_perimeter(region):
-    """
-    Calculate the perimeter of a given region.
-    
-    Args:
-        region (tuple): A tuple containing the region's symbol and positions
-    
-    Returns:
-        int: Number of boundary edges
-    """
-    perimeter = 0
-    for pos in region[1]:
-        # Check adjacent positions
-        for d in [1, -1, 1j, -1j]:
-            new_pos = pos + d
-            # Count edges that are outside the region
-            if new_pos not in region[1]:
-                perimeter += 1
-    return perimeter
-
-
-@performance_profiler
-def part_one(grid):
-    """
-    Identifies all regions in the grid and calculates a price 
-    based on area and perimeter.
-    
-    Args:
-        grid (dict): The grid dictionary with complex number coordinates
-    
-    Returns:
-        list: List of identified regions
-    """
-    # List to store identified regions
-    regions = []
-    
-    # Set of unexplored grid positions
-    unexplored = set(grid.keys())
-    
-    # Explore and identify all regions
-    while len(unexplored) > 0:
-        # Pick a starting position
-        start = unexplored.pop()
+            # Check adjacent points
+            for dx, dy in directions:
+                # Calculate neighboring point
+                neighbor = (current[0] + dx, current[1] + dy)
+                
+                # If neighbor has a different value, it's a boundary
+                if grid.get(neighbor) != grid.get(current):
+                    # Increment perimeter
+                    perimeter += 1
+                    
+                    # Rotate 90-degrees to check adjacent regions
+                    rotated = (current[0] - dy, current[1] + dx)
+                    
+                    # Determine if this is a distinct side
+                    # Check if the rotated point is in a different region
+                    # Verify if the point next to the rotated point is in the same original region
+                    if (grid.get(rotated) != grid.get(current) or 
+                        grid.get((rotated[0] + dx, rotated[1] + dy)) == grid.get(current)):
+                        sides += 1
+                
+                # If neighbor is not visited and has same value, add to region
+                elif neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+                    area += 1
         
-        # Perform flood fill to identify the region
-        region = flood_fill(grid, start)
+        # Calculate part 1: area multiplied by perimeter
+        part1 += area * perimeter
         
-        # Remove explored positions from unexplored set
-        unexplored -= region
-        
-        # Store region information
-        regions.append((grid[start], region))
-
-    # Calculate total price
-    price = 0
-    for region in regions:
-        # Calculate area and perimeter for each region
-        area, perimeter = get_area(region), get_perimeter(region)
-        price += area * perimeter
-
-    print("Part 1:", price)
-    # Return regions for use in part 2
-    return regions
-
-
-def get_sides_count(region):
-    """
-    Count the number of distinct sides for a given region.
+        # Calculate part 2: area multiplied by number of sides
+        part2 += area * sides
     
-    Identify unique sides by tracking perimeter edges and their orientation.
-    
-    Args:
-        region (tuple): A tuple containing the region's symbol and positions
-    
-    Returns:
-        int: Number of distinct sides
-    """
-    # Set to track perimeter edges and directions
-    perimeter_edges = set()
-    
-    # Collect perimeter edges
-    for pos in region[1]:
-        for direction in [1, -1, 1j, -1j]:
-            new_pos = pos + direction
-            if new_pos not in region[1]:
-                perimeter_edges.add((new_pos, direction))
-    
-    # Count distinct sides
-    distinct_sides = 0
-    while len(perimeter_edges) > 0:
-        # Pop a perimeter edge
-        pos, direction = perimeter_edge.pop()
-        distinct_sides += 1
-        
-        # Explore in current direction
-        next_pos = pos + direction * 1j
-        while (next_pos, direction) in perimeter_edges:
-            perimeter_edges.remove((next_pos, direction))
-            next_pos += direction * 1j
-        
-        # Explore in opposite direction
-        next_pos = pos + direction * -1j
-        while (next_pos, direction) in perimeter_edges:
-            perimeter_edges.remove((next_pos, direction))
-            next_pos += direction * -1j
-    
-    return distinct_sides
-
-
-@performance_profiler
-def part_two(regions):
-    """
-    Solve part two of the Advent of Code challenge.
-    
-    Calculates a price based on region areas and side counts.
-    
-    Args:
-        regions (list): List of regions identified in part one
-    """
-    # Calculate total price
-    price = 0
-    for region in regions:
-        # Calculate area and side count for each region
-        area, sides = get_area(region), get_sides_count(region)
-        price += area * sides
-        
-    print("Part 2:", price)
+    return part1, part2
 
 
 if __name__ == "__main__":
-    grid = parse_input("input.txt")
-    regions = part_one(grid)
-    part_two(regions)
+    part1, part2 = solve_day12()
+    print(f"Part 1: {part1}")
+    print(f"Part 2: {part2}")
