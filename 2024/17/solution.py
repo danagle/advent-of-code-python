@@ -132,7 +132,7 @@ def run_program(registerA, registerB, registerC, program):
         output, registerA, registerB, registerC, instruction_pointer = execute_instruction(
             registerA, registerB, registerC, instruction_pointer, program
         )
-        
+
         if output is not None:
             output_values.append(output)
     
@@ -152,14 +152,16 @@ def find_best_input(program, cursor, current_value):
         int or None: Best input value that matches program requirements.
     """
     for candidate in range(8):
+        registerA = current_value * 8 + candidate
         # Check if running the program with candidate produces expected output
-        if run_program(current_value * 8 + candidate, 0, 0, program) == program[cursor:]:
+        if run_program(registerA, 0, 0, program) == program[cursor:]:
             if cursor == 0:
-                return current_value * 8 + candidate
+                return registerA
             
             # Recursive call to find previous best input
-            result = find_best_input(program, cursor - 1, current_value * 8 + candidate)
+            result = find_best_input(program, cursor - 1, registerA)
             if result is not None:
+                #print(candidate, registerA)
                 return result
     
     return None
