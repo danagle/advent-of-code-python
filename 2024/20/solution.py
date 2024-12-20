@@ -38,18 +38,16 @@ def performance_profiler(method):
     return timing_wrapper
 
 
-def parse_input(filepath):
-    with open(filepath, "r") as f:
+def parse_input(file_path):
+    with open(file_path, "r") as f:
         grid = [list(line.strip()) for line in f]
-
-    start = (-1, -1)
-    end = (-1, -1)
-    for i in range(len(grid)):
-        for j in range(len(grid[0])):
-            if grid[i][j] == 'S':
-                start = (i, j)
-            elif grid[i][j] == 'E':
-                end = (i, j)
+    
+    # Use next() with generator expression instead of nested loops
+    start = next((i, j) for i, row in enumerate(grid) 
+                 for j, cell in enumerate(row) if cell == 'S')
+    end = next((i, j) for i, row in enumerate(grid) 
+               for j, cell in enumerate(row) if cell == 'E')
+    
     if start == (-1, -1) or end == (-1, -1):
         raise ValueError("Start or end position not found in grid")
     return grid, start, end
@@ -76,18 +74,32 @@ def build_graph(grid, allow_walls = False):
 
 
 def find_all_cheats(grid, start, end, max_cheat_steps):
+    """Find all possible cheats that save at least 100 steps.
+    
+    Args:
+        grid: 2D list representing the maze
+        start: Tuple (y, x) of start position
+        end: Tuple (y, x) of end position
+        max_cheat_steps: Maximum number of steps allowed through walls
+        
+    Returns:
+        List of integers representing time saved for each valid cheat
+    """
+    # Build initial graph and get normal path length
     G = build_graph(grid)
     try:
-        normal_time = nx.shortest_path_length(G, start, end, weight='weight')
+        normal_time = nx.shortest_path_length(G, start, end, weight="weight")
     except nx.NetworkXNoPath:
         return []
-    
+
+    valid_tiles = set([".", "S", "E"])
+
     # Build graph that includes wall passages
     G_walls = build_graph(grid, allow_walls=True)
     
     # Pre-calculate all shortest paths from start and to end
-    start_distances = nx.single_source_dijkstra_path_length(G, start, weight='weight')
-    end_distances = nx.single_source_dijkstra_path_length(G, end, weight='weight')
+    start_distances = nx.single_source_dijkstra_path_length(G, start, weight="weight")
+    end_distances = nx.single_source_dijkstra_path_length(G, end, weight="weight")
     
     saved_times = []
     height, width = len(grid), len(grid[0])
@@ -95,7 +107,7 @@ def find_all_cheats(grid, start, end, max_cheat_steps):
     
     # For each valid path position
     for y, x in product(range(height), range(width)):
-        if grid[y][x] not in '.SE':
+        if grid[y][x] not in valid_tiles:
             continue
         start_pos = (y, x)
         if start_pos not in start_distances:
@@ -108,7 +120,7 @@ def find_all_cheats(grid, start, end, max_cheat_steps):
         
         # Check each possible cheat end
         for end_pos, cheat_steps in cheat_ends.items():
-            if grid[end_pos[0]][end_pos[1]] not in '.SE':
+            if grid[end_pos[0]][end_pos[1]] not in valid_tiles:
                 continue
             if end_pos not in end_distances:
                 continue
