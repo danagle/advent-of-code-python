@@ -108,7 +108,7 @@ def execute_instruction(valueA, valueB, valueC, instruction_pointer, program):
         return (None, valueA, valueA // pow(2, combination_value), valueC, instruction_pointer + 2)
     elif opcode == 7:
         # Integer division for third value
-        return (None, valueA, valueB, valueC // pow(2, combination_value), instruction_pointer + 2)
+        return (None, valueA, valueB, valueA // pow(2, combination_value), instruction_pointer + 2)
 
 
 def run_program(registerA, registerB, registerC, program):
@@ -171,11 +171,11 @@ def solve_day_17(registers, program):
     registerA, registerB, registerC = registers
     
     # Part 1: Print program output
-    print(",".join([str(x) for x in run_program(registerA, registerB, registerC, program)]))
+    print("Part 1:", ",".join([str(x) for x in run_program(registerA, registerB, registerC, program)]))
     
     # Part 2: Find best input
     best_input = find_best_input(program, len(program) - 1, 0)
-    print(best_input)
+    print("Part 2:", best_input)
 
 
 if __name__ == "__main__":
