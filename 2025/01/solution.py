@@ -25,18 +25,16 @@ def part_one(rotations, dial=50):
 
 def part_two(rotations, dial=50):
     """The rotations pass zero how many times?"""
-    total_passes = 0
+    passes = 0
 
     for direction, distance in rotations:
         # Steps until you hit the wrap point (0 -> 99 when moving left) is 
         # (100 - dial) % 100
         # Add the distance and count how many full 100-step blocks occur.
-        passes = ((100 + direction * dial) % 100 + distance) // 100
+        passes += ((100 + direction * dial) % 100 + distance) // 100
         dial = (dial + direction * distance) % 100
 
-        total_passes += passes
-
-    print("Part 2:", total_passes)
+    print("Part 2:", passes)
 
 
 if __name__ == "__main__":
