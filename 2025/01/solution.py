@@ -13,19 +13,18 @@ def read_input_file(filepath="input.txt"):
 
 
 def part_one(rotations, dial=50):
-    """The rotations stops at zero how many times?"""
+    """The rotations stop at zero how many times?"""
     stops_at_zero = 0
 
     for direction, distance in rotations:
         dial = (dial + direction * distance) % 100
-        if dial == 0:
-            stops_at_zero += 1
+        stops_at_zero += dial == 0
 
     print("Part 1:", stops_at_zero)
 
 
 def part_two(rotations, dial=50):
-    """The rotations passes zero how many times?"""
+    """The rotations pass zero how many times?"""
     total_passes = 0
 
     for direction, distance in rotations:
