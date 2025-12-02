@@ -12,32 +12,26 @@ def read_input_file(filepath="input.txt"):
             for s in Path(filepath).read_text(encoding="utf-8").strip().splitlines()]
 
 
-def part_one(rotations, dial=50):
-    """The rotations stop at zero how many times?"""
-    stops_at_zero = 0
-
-    for direction, distance in rotations:
-        dial = (dial + direction * distance) % 100
-        stops_at_zero += dial == 0
-
-    print("Part 1:", stops_at_zero)
-
-
-def part_two(rotations, dial=50):
-    """The rotations pass zero how many times?"""
-    passes = 0
+def rotate_dial(rotations, dial=50):
+    """
+    Simulate the rotations while counting the number of instances that
+    it passes zero or stops at the zero position.
+    """
+    stops_at_zero = passes_zero = 0
 
     for direction, distance in rotations:
         # Steps until you hit the wrap point (0 -> 99 when moving left) is 
         # (100 - dial) % 100
         # Add the distance and count how many full 100-step blocks occur.
-        passes += ((100 + direction * dial) % 100 + distance) // 100
+        passes_zero += ((100 + direction * dial) % 100 + distance) // 100
         dial = (dial + direction * distance) % 100
+        stops_at_zero += dial == 0
 
-    print("Part 2:", passes)
+    return stops_at_zero, passes_zero
 
 
 if __name__ == "__main__":
     instructions = read_input_file()
-    part_one(instructions)
-    part_two(instructions)
+    p1, p2 = rotate_dial(instructions)
+    print("Part 1:", p1)
+    print("Part 2:", p2)
