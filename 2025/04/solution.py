@@ -5,61 +5,46 @@ https://adventofcode.com/2025/day/4
 """
 from pathlib import Path
 
-NEIGHBOURS = [
-    (-1, -1), (-1, 0), (-1, 1), (0, 1),
-    (1, 1), (1, 0), (1, -1), (0, -1)
-]
-
 
 def read_input_file(filepath="input.txt"):
-    """Reads a 2D grid from the input file."""
-    rows = Path(filepath).read_text(encoding="utf-8").strip().splitlines()
-    return [list(row) for row in rows]
+    """
+    Reads index file as a string of text.
+    Determines the line length and indexes of all rolls '@' in the string.
+    """
+    text = Path(filepath).read_text(encoding="utf-8")
+    width = text.index('\n') + 1
+    indexes = {i for i, c in enumerate(text) if c == '@'}
+    return indexes, width
 
 
-def rolls_to_remove(grid):
-    """Get rolls of paper that can be removed by a forklift."""
-    height = len(grid)
-    width = len(grid[0])
-    remove = []
-
-    for r, row in enumerate(grid):
-        for c, cell in enumerate(row):
-            if cell != '@':
-                continue
-            num_rolls = 0
-            for dr, dc in NEIGHBOURS:
-                nr = r + dr
-                nc = c + dc
-                if 0 <= nr < height and 0 <= nc < width:
-                    num_rolls += grid[nr][nc] == '@'
-            if num_rolls < 4:
-                remove.append((r, c))
-
-    return remove
+def can_be_removed(indexes, width, i):
+    """A roll can be removed if it has less than 4 rolls adjacent to it."""
+    return len(indexes.intersection({i-width-1, i-width, i-width+1, i-1, i+1, i+width-1, i+width, i+width+1})) < 4
 
 
-def optimize_rolls(grid):
+def part_one(roll_indexes, diagram_width):
+    """Get number of rolls of paper that can be removed by a forklift."""
+    return sum(can_be_removed(roll_indexes, diagram_width, i) for i in roll_indexes)
+
+
+def part_two(roll_indexes, diagram_width):
     """Remove rolls of paper that are accessible by a forklift."""
-    rolls_removed = 0  # How many rolls of paper in total can be removed
+    rolls_removed = 0
 
     while True:
-        to_remove = rolls_to_remove(grid)
-        if rolls_removed == 0:
-            # How many rolls of paper can be accessed by a forklift
-            part1 = len(to_remove) 
-        if len(to_remove) > 0:
-            rolls_removed += len(to_remove)
-            for r, c in to_remove:
-                grid[r][c] = '.'
-        else:
+        some_removed = False
+        for i in list(roll_indexes):
+            if can_be_removed(roll_indexes, diagram_width, i):
+                roll_indexes.discard(i)
+                rolls_removed += 1
+                some_removed = True
+        if not some_removed:
             break
 
-    return part1, rolls_removed
+    return rolls_removed
 
 
 if __name__ == "__main__":
-    diagram = read_input_file()
-    p1, p2 = optimize_rolls(diagram)
-    print("Part 1:", p1)
-    print("Part 2:", p2)
+    diagram_rolls, line_width = read_input_file()
+    print("part 1:", part_one(diagram_rolls, line_width))
+    print("part 2:", part_two(diagram_rolls, line_width))
