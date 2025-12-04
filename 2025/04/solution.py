@@ -8,7 +8,7 @@ from pathlib import Path
 
 def read_input_file(filepath="input.txt"):
     """
-    Reads index file as a string of text.
+    Reads the input file as a string of text.
     Determines the line length and indexes of all rolls '@' in the string.
     """
     text = Path(filepath).read_text(encoding="utf-8")
