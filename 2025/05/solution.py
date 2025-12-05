@@ -6,26 +6,21 @@ https://adventofcode.com/2025/day/5
 from pathlib import Path
 
 def parse_input_file(filepath="input.txt"):
-    """Parses input file into a list of ranges and ingredient IDs."""
+    """Parses input file into a list of sorted ranges and ingredient IDs."""
     ranges_text, ingredients_text = Path(filepath).read_text(encoding="utf-8").strip().split("\n\n")
 
     ranges = sorted([tuple(map(int, r.split('-'))) for r in ranges_text.splitlines()])
-    ingredient_ids = sorted([int(i) for i in ingredients_text.splitlines()])
+    ingredients = [int(i) for i in ingredients_text.splitlines()]
 
-    return ranges, ingredient_ids
+    return ranges, ingredients
 
 
 def part_one(ranges, ids):
     """Count how many ingredient ids are found within the list of ranges."""
-    not_spoiled = 0
-
-    for id in ids:
-        for r in ranges:
-            if r[0] <= id <= r[1]:
-                not_spoiled += 1
-                break
-
-    return not_spoiled
+    return sum(
+        any(start <= id <= end for start, end in ranges)
+        for id in ids
+    )
 
 
 def part_two(ranges):
@@ -34,8 +29,10 @@ def part_two(ranges):
 
     for start, end in ranges:
         if not merged or start > merged[-1][1] + 1:
+            # Add new range
             merged.append([start, end])
         else:
+            # Merge with the last range
             merged[-1][1] = max(merged[-1][1], end)
 
     return sum(end - start + 1 for start, end in merged)
