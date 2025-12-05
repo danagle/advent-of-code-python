@@ -30,16 +30,15 @@ def part_one(roll_indexes, diagram_width):
 def part_two(roll_indexes, diagram_width):
     """Remove rolls of paper that are accessible by a forklift."""
     rolls_removed = 0
+    some_removed = True  # initialize to True
 
-    while True:
+    while some_removed:
         some_removed = False
         for i in list(roll_indexes):
             if can_be_removed(roll_indexes, diagram_width, i):
                 roll_indexes.discard(i)
                 rolls_removed += 1
                 some_removed = True
-        if not some_removed:
-            break
 
     return rolls_removed
 
