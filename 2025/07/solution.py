@@ -17,24 +17,24 @@ def part_one_and_two(manifold):
     Simulates tachyon beams traveling through the tachyon manifold,
     tracking splits and final beam counts.
     """
-    beams = {manifold[0].index('S'): 1}
+    beam_counts = [c == 'S' for c in manifold[0]]
     splits = 0
 
-    for row in manifold[1:]:
-        beam_copy = [(position, beam_count) for position, beam_count in beams.items()]
-        for position, beam_count in beam_copy:
-            if row[position] == '^':
+    # splitters appear on every second line
+    splitters = manifold[2::2]
+
+    for row in splitters:
+        beam_positions = [x for x, beams in enumerate(beam_counts) if beams > 0]
+        for x in beam_positions:
+            if row[x] == '^':
                 splits += 1
-                # tachyon beam splits left (position - 1) and right (position + 1)
-                for side in [position - 1, position + 1]:
-                    if side in beams:
-                        beams[side] += beam_count
-                    else:
-                        beams[side] = beam_count
+                beams = beam_counts[x]
+                # tachyon beam splits left (x - 1) and right (x + 1)
+                beam_counts[x-1] += beams
+                beam_counts[x+1] += beams
+                beam_counts[x] = 0
 
-                beams.pop(position)
-
-    return splits, sum(beams.values())
+    return splits, sum(beam_counts)
 
 
 if __name__ == "__main__":
